@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Discord Webhook Sender</title>
+    <style>
+        /* Global styles */
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(to right, #1d2b64, #f8cdda);
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        .container {
+            width: 90%;
+            max-width: 750px;
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+            animation: fadeIn 1.5s ease-in-out;
+        }
+        /* Animations */
+        @keyframes fadeIn {
+            0% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+        /* Header */
+        h1 {
+            text-align: center;
+            color: #fff;
+            font-size: 3rem;
+            margin-bottom: 20px;
+            animation: bounceInDown 1s;
+        }
+        @keyframes bounceInDown {
+            0% { transform: translateY(-300px); opacity: 0; }
+            60% { transform: translateY(30px); opacity: 1; }
+            100% { transform: translateY(0); }
+        }
+        /* Input styles */
+        .input-box {
+            width: 100%;
+            margin: 15px 0;
+            padding: 15px;
+            font-size: 1.2rem;
+            background: #333;
+            color: #fff;
+            border: 1px solid #444;
+            border-radius: 10px;
+            transition: 0.3s ease;
+            box-sizing: border-box;
+        }
+        .input-box:focus {
+            outline: none;
+            border: 1px solid #f8cdda;
+        }
+        /* Buttons */
+        .btn {
+            width: 100%;
+            padding: 15px;
+            background: #f8cdda;
+            color: #333;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: 0.3s ease;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.3);
+        }
+        .btn:hover {
+            background: #ff8c42;
+            transform: scale(1.05);
+            box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.4);
+        }
+        /* Preview Area */
+        .preview {
+            background-color: #282c34;
+            border: 1px solid #444;
+            border-radius: 8px;
+            padding: 20px;
+            color: #fff;
+            font-family: 'Courier New', Courier, monospace;
+            min-height: 150px;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+        }
+        .counter {
+            text-align: center;
+            color: #fff;
+            font-size: 1.1rem;
+            margin-top: 10px;
+        }
+        .counter.warning {
+            color: #ff7e5f;
+        }
+        .counter.normal {
+            color: #fff;
+        }
+        /* Theme Toggle */
+        .theme-toggle {
+            display: flex;
+            justify-content: center;
+            margin-top: 30px;
+        }
+        .theme-toggle button {
+            padding: 12px 20px;
+            background-color: #ff8c42;
+            border: none;
+            border-radius: 8px;
+            color: #333;
+            cursor: pointer;
+            transition: 0.3s ease;
+        }
+        .theme-toggle button:hover {
+            background-color: #f8cdda;
+            transform: scale(1.05);
+        }
+        /* Toolbar for text formatting */
+        .toolbar {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 15px;
+        }
+        .toolbar button {
+            padding: 10px;
+            background: #333;
+            color: #fff;
+            border: 1px solid #444;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: 0.3s ease;
+        }
+        .toolbar button:hover {
+            background: #f8cdda;
+            color: #333;
+        }
+        /* Responsive design */
+        @media screen and (max-width: 768px) {
+            body {
+                padding: 0 10px;
+            }
+            .container {
+                width: 100%;
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Discord Webhook Sender</h1>
+        
+        <div class="toolbar">
+            <button onclick="applyBold()">Bold</button>
+            <button onclick="applyItalic()">Italic</button>
+            <button onclick="applyUnderline()">Underline</button>
+        </div>
+
+        <input type="text" id="webhook-url" class="input-box" placeholder="Enter Webhook URL">
+        <textarea id="message-content" class="input-box" rows="6" placeholder="Enter your message here..."></textarea>
+
+        <div class="preview" id="message-preview">Preview will show here...</div>
+
+        <div class="counter normal" id="word-count">Word Count: <span id="count">0</span></div>
+
+        <button class="btn" onclick="sendWebhook()">Send Webhook</button>
+
+        <div class="theme-toggle">
+            <button onclick="toggleTheme()">Toggle Theme</button>
+        </div>
+    </div>
+
+    <script>
+        // Function to toggle between light and dark modes
+        function toggleTheme() {
+            document.body.classList.toggle('dark-theme');
+            document.querySelector('.container').classList.toggle('dark-container');
+        }
+
+        // Function to apply bold formatting
+        function applyBold() {
+            let message = document.getElementById("message-content");
+            message.value += "**Bold Text**"; 
+            updatePreview();
+        }
+
+        // Function to apply italic formatting
+        function applyItalic() {
+            let message = document.getElementById("message-content");
+            message.value += "*Italic Text*"; 
+            updatePreview();
+        }
+
+        // Function to apply underline formatting
+        function applyUnderline() {
+            let message = document.getElementById("message-content");
+            message.value += "__Underlined Text__"; 
+            updatePreview();
+        }
+
+        // Function to update preview and count characters
+        function updatePreview() {
+            let messageContent = document.getElementById("message-content").value;
+            let preview = document.getElementById("message-preview");
+            preview.textContent = messageContent; 
+            updateWordCount(messageContent);
+        }
+
+        // Function to update word count
+        function updateWordCount(messageContent) {
+            let wordCount = messageContent.split(/\s+/).length;
+            let countElement = document.getElementById("count");
+            let wordCountElement = document.getElementById("word-count");
+
+            countElement.textContent = wordCount;
+
+            if (wordCount > 2000) {
+                wordCountElement.className = 'counter warning';
+            } else {
+                wordCountElement.className = 'counter normal';
+            }
+        }
+
+        // Function to send the webhook message
+        function sendWebhook() {
+            let webhookUrl = document.getElementById("webhook-url").value;
+            let messageContent = document.getElementById("message-content").value;
+
+            if (!webhookUrl || !messageContent) {
+                alert("Please provide both webhook URL and message content.");
+                return;
+            }
+
+            let data = {
+                content: messageContent
+            };
+
+            fetch(webhookUrl, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert("Message sent successfully!");
+                console.log(data);
+            })
+            .catch(error => {
+                alert("Failed to send message. Please check the webhook URL.");
+                console.error(error);
+            });
+        }
+
+        // Update preview immediately
+        document.getElementById("message-content").addEventListener("input", updatePreview);
+    </script>
+</body>
+</html>

@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Advanced Discord Webhook Sender</title>
+  <style>
+    :root {
+      --bg: #121212;
+      --fg: #ffffff;
+      --accent: #5865f2;
+    }
+
+    body.light {
+      --bg: #f5f5f5;
+      --fg: #121212;
+      --accent: #5865f2;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--fg);
+    }
+
+    .container {
+      max-width: 700px;
+      margin: 2rem auto;
+      padding: 1.5rem;
+      background: rgba(255,255,255,0.03);
+      border-radius: 10px;
+      box-shadow: 0 0 10px #00000030;
+    }
+
+    h1 {
+      text-align: center;
+      color: var(--accent);
+    }
+
+    input, textarea {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      background: #1e1e1e;
+      color: white;
+      border: 1px solid #444;
+      border-radius: 5px;
+      font-size: 14px;
+    }
+
+    .format-buttons button, .controls button {
+      margin: 5px 4px;
+      padding: 7px 14px;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .counters {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 5px;
+      font-size: 13px;
+    }
+
+    #previewBox {
+      margin-top: 20px;
+      padding: 10px;
+      border: 1px solid #555;
+      background: #1c1c1c;
+      border-radius: 5px;
+    }
+
+    pre {
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      color: #ccc;
+    }
+
+    @media (max-width: 600px) {
+      .controls, .format-buttons {
+        display: flex;
+        flex-wrap: wrap;
+      }
+
+      button {
+        flex: 1 1 auto;
+        margin: 3px 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Discord Webhook Sender</h1>
+
+    <input type="text" id="webhook" placeholder="Enter Discord Webhook URL" />
+
+    <div class="format-buttons">
+      <button onclick="format('**')">Bold</button>
+      <button onclick="format('*')">Italic</button>
+      <button onclick="format('__')">Underline</button>
+      <button onclick="format('`')">Code</button>
+      <button onclick="clearMessage()">Clear</button>
+    </div>
+
+    <textarea id="message" rows="10" placeholder="Enter your message here..."></textarea>
+
+    <div class="counters">
+      <span id="charCount">0 / 2000</span>
+      <span id="wordCount">0 words</span>
+    </div>
+
+    <div class="controls">
+      <button onclick="sendMessage()">Send Message</button>
+      <button onclick="toggleTheme()">Toggle Theme</button>
+    </div>
+
+    <div id="previewBox">
+      <h3>Live Preview:</h3>
+      <pre id="preview"></pre>
+    </div>
+  </div>
+
+  <script>
+    const messageInput = document.getElementById("message");
+    const preview = document.getElementById("preview");
+    const charCount = document.getElementById("charCount");
+    const wordCount = document.getElementById("wordCount");
+
+    function updatePreview() {
+      const text = messageInput.value;
+      preview.innerText = text;
+      charCount.innerText = `${text.length} / 2000`;
+      wordCount.innerText = `${text.trim().split(/\s+/).filter(Boolean).length} words`;
+      localStorage.setItem("draft", text);
+      if (text.length > 2000) {
+        charCount.style.color = "red";
+      } else {
+        charCount.style.color = "";
+      }
+    }
+
+    messageInput.addEventListener("input", updatePreview);
+
+    function format(wrapper) {
+      const start = messageInput.selectionStart;
+      const end = messageInput.selectionEnd;
+      const selected = messageInput.value.slice(start, end);
+      const before = messageInput.value.slice(0, start);
+      const after = messageInput.value.slice(end);
+      messageInput.value = before + wrapper + selected + wrapper + after;
+      messageInput.focus();
+      updatePreview();
+    }
+
+    function clearMessage() {
+      messageInput.value = "";
+      updatePreview();
+    }
+
+    function toggleTheme() {
+      document.body.classList.toggle("light");
+    }
+
+    async function sendMessage() {
+      const webhook = document.getElementById("webhook").value.trim();
+      const message = messageInput.value.trim();
+
+      if (!webhook || !message) return alert("Webhook or message is missing.");
+      if (message.length > 2000) return alert("Message exceeds 2000 character limit!");
+
+      try {
+        await fetch(webhook, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ content: message })
+        });
+        alert("Message sent!");
+      } catch (err) {
+        alert("Failed to send. Check the webhook URL.");
+      }
+    }
+
+    // Load saved draft
+    window.onload = () => {
+      const saved = localStorage.getItem("draft");
+      if (saved) messageInput.value = saved;
+      updatePreview();
+    };
+  </script>
+</body>
+</html>
